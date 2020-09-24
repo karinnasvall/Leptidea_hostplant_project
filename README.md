@@ -1,10 +1,10 @@
 # Leptidea_hostplant_project
 Scripts used in the Leptidea hostplant-project for differential gene expression and microbiome analysis. 
-The pipeline for RNA-seq processing was created by Luis Leal (ref) and the microbiome analysis was created by Axel Künstner (ref).
+The pipeline for RNA-seq processing was created by Luis Leal (Leal et al. 2018, doi:10.1111/mec.14501) and the microbiome analysis was created by Axel Künstner.
 
 The workflow is described in the manuscript but these are the main steps. 
 
-# RNA-seq processing and differential gene expression analysis
+## RNA-seq processing and differential gene expression analysis
 
 FASTQC version 0.11.5 (Andrews, 2016) - overall quality assesment of the RNA-seq reads.
 
@@ -30,7 +30,7 @@ DESeq2 version 3.6 (Love et al., 2014) as implemented in R version 3.4.3 (R Core
 
 topGO version 2.38.1 (Alexa & Rahnenfuhrer, 2016) in the Bioconductor package in R version 3.4.3 (R Core Team, 2013) - assess enrichment of specific gene functions in differentially expressed gene sets using the database org.Dm.eg.db from the R-package AnnotationDbi (Pagès et al., 2019) for orthologous genes for the gene ontology categories biological process, cellular component and molecular function.
 
-# Microbiome characterisation
+## Microbiome characterisation
 
 dada2 version 1.14.0 (Callahan et al., 2016) -  read filtering and processing. Omitting low quality reads, clipping reads to 295 bp (maxEE = 1, maxN = 0, truncQ = 2 and phiX removal activated) and removing chimeric sequences with removeBimeraDenovo function in dada2. 
 
