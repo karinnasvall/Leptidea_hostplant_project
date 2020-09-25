@@ -3,7 +3,7 @@
 # @author: Axel Künstner
 # @affiliation: Medical Systems Biology Group, University of Lübeck
 # @date: 2019-10-21
-#
+# @modified by Karin Näsvall 200326
 ###############
 
 # R >= 3.6.x
