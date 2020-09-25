@@ -1,0 +1,62 @@
+---
+title: "STAR_mapping_comp"
+author: "KN"
+date: "8 april 2020"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+```{r data}
+mapping_results <- read.table("2b_Mapping_STAR_STEP2_comp_settings_cor.txt", header = T)
+
+cat_subset <- mapping_results[1:41, ]
+swe_subset <- mapping_results[42:66, ]
+par(mfrow=c(2,2))
+boxplot(mapping_results[42:66, ]$uniq_mapped_reads_066, mapping_results[1:41, ]$uniq_mapped_reads_066, ylim=c(60,90), names = c("Swe", "Cat"), main="0.66")
+boxplot(mapping_results[42:66, ]$uniq_mapped_reads_03, mapping_results[1:41, ]$uniq_mapped_reads_03, ylim=c(60,90), names = c("Swe", "Cat"), main="0.3")
+boxplot(mapping_results[42:66, ]$uniq_mapped_reads_0, mapping_results[1:41, ]$uniq_mapped_reads_0, ylim=c(60,90), names = c("Swe", "Cat"), main="0")
+boxplot(mapping_results[42:66, ]$uniq_mapped_reads_0, mapping_results[1:41, ]$uniq_mapped_reads_0, mapping_results[42:66, ]$uniq_mapped_reads_03, mapping_results[1:41, ]$uniq_mapped_reads_03, mapping_results[42:66, ]$uniq_mapped_reads_066, mapping_results[1:41, ]$uniq_mapped_reads_066, ylim=c(60,90), names = c("Swe_0", "Cat_0", "Swe_0.3", "Cat_0.3", "Swe_0.66", "Cat_0.66"))
+```
+
+```{r filtering_results}
+filtering_sumstats <- read.table("filtering_sumstats.txt", header = T)
+#excluding the gut samples 67-72 (both reads, rows 131-142)
+filtering_sumstats <- filtering_sumstats[1:130, ]
+ 
+boxplot(filtering_sumstats[83:130, ]$Mapped_lept, filtering_sumstats[1:82, ]$Mapped_lept, names = c("Swe", "Cat"))
+
+boxplot(filtering_sumstats[83:130, ]$Mapped_lept, filtering_sumstats[83:130, ]$one_hit, filtering_sumstats[83:130, ]$mult_hits, filtering_sumstats[1:82, ]$Mapped_lept, filtering_sumstats[1:82, ]$one_hit, filtering_sumstats[1:82, ]$mult_hits,  names = c("Swe_tot", "Swe_one_hit", "Swe_mult_hits", "Cat_tot", "Cat_one_hit", "Cat_multiple"), main="Mapping FastQScreen")
+
+summary(filtering_sumstats)
+colMeans(filtering_sumstats[ ,2:7])
+colSums(filtering_sumstats[ ,2:7])
+```
+Summary
+             Sample_ID     Raw_reads          TrimGalore          Prinseq            CutAdapt           Condetri          SortMeRNA       
+ P11917_101_S49_R1:  1   Min.   : 8321308   Min.   : 7676231   Min.   : 6727947   Min.   : 6566045   Min.   : 6442542   Min.   : 5416797  
+ P11917_101_S49_R2:  1   1st Qu.: 9819672   1st Qu.: 9000224   1st Qu.: 7963397   1st Qu.: 7754868   1st Qu.: 7620653   1st Qu.: 7358189  
+ P11917_102_S50_R1:  1   Median :12021534   Median :11249409   Median :10075653   Median : 9771315   Median : 9600375   Median : 8977748  
+ P11917_102_S50_R2:  1   Mean   :12150053   Mean   :11312275   Mean   :10151854   Mean   : 9900921   Mean   : 9730005   Mean   : 9011092  
+ P11917_103_S51_R1:  1   3rd Qu.:13970952   3rd Qu.:12864385   3rd Qu.:11666888   3rd Qu.:11422534   3rd Qu.:11203335   3rd Qu.:10350433  
+ P11917_103_S51_R2:  1   Max.   :18440161   Max.   :17621986   Max.   :16433969   Max.   :16142258   Max.   :15894538   Max.   :15433681  
+ (Other)          :124                                                                                                                    
+  Map_lept_rep     Mapped_lept       one_hit        mult_hits    
+ Min.   :0.3900   Min.   :89.01   Min.   :48.25   Min.   :24.08  
+ 1st Qu.:0.5125   1st Qu.:93.89   1st Qu.:57.78   1st Qu.:27.80  
+ Median :0.6400   Median :95.68   Median :60.93   Median :29.18  
+ Mean   :0.7128   Mean   :95.20   Mean   :60.26   Mean   :29.35  
+ 3rd Qu.:0.8675   3rd Qu.:96.97   3rd Qu.:62.65   3rd Qu.:30.54  
+ Max.   :1.4200   Max.   :98.56   Max.   :68.09   Max.   :38.72  
+
+colMeans
+ Raw_reads TrimGalore    Prinseq   CutAdapt   Condetri  SortMeRNA 
+  12150053   11312275   10151854    9900921    9730005    9011092
+  
+ColSums
+Raw_reads TrimGalore    Prinseq   CutAdapt   Condetri  SortMeRNA 
+1579506858 1470595814 1319740998 1287119692 1264900712 1171441934
+

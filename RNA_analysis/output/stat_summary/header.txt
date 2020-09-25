@@ -1,0 +1,1 @@
+Sample_ID too_many_loci_reads_066 too_short_066 uniq_mapped_reads_066 too_many_loci_reads_03 too_short_03  uniq_mapped_reads_03 too_many_loci_reads_0 too_short_0  uniq_mapped_reads_0

@@ -1,0 +1,707 @@
+---
+title: "RNA_hostplant_DESeq2"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r get_data}
+#source("https://bioconductor.org/biocLite.R")
+#biocLite("DESeq2")
+#biocLite("sva")
+#biocLite("cowplot")
+library("DESeq2")
+library(sva)
+library(ggplot2)
+
+sessionInfo()
+
+#Clear all states
+#rm(list=ls(all=TRUE))
+#dev.off()
+
+#This is a DEseq analysis of all experimental groups together, including PCA-analysis and visualisation.
+
+#Load gene count matrix and labels ####
+
+#setwd("")
+countData <- as.matrix(read.csv("../outputs/2c_Quantification_StringTie_STEP2/gene_count_matrix.csv", row.names="gene_id"))
+head(countData)
+nrow(countData)
+
+#setwd("/home/luisleal/MYPROJ/3_DosageCompensation_LS/Scripts_NEW")
+colData <- read.csv("/proj/uppstore2017185/b2014034_nobackup/Karin/RNAseq_hostplant/working/sample_info_DEseq_corr2.txt", sep="\t", row.names=1, header=F)
+colnames(colData) <- c("Hostplant", "Population", "Stage", "Sex", "Family", "Bodypart")
+colData$Stage <- as.factor(colData$Stage)
+colData
+str(colData)
+
+#Note: The PHENO_DATA file contains information on each sample, e.g., sex or population.
+#The exact way to import this depends on the format of the file.
+
+
+
+
+##### output folders
+
+# standard filtering
+#OUT_FOLD_STDF <- "/crex1/proj/uppstore2017185/b2014034_nobackup/Veronika/RNA_HostPlantProject/results/4_DESeq2/03_Interaction_effect/"
+
+
+#From deseq2 manual:
+#...for some datasets, exploratory data analysis (EDA) plots could reveal that one
+#or more groups has much higher within-group variability than the others. A simulated
+#example of such a set of samples is shown below. This is case where, by comparing 
+#groups A and B separately - subsetting a DESeqDataSet to only samples from those two 
+#groups and then running DESeq on this subset - will be more sensitive than a model 
+#including all samples together. It should be noted that such an extreme range of 
+#within-group variability is not common, although it could arise if certain treatments
+#produce an extreme reaction (e.g. cell death). Again, this can be easily detected
+#from the EDA plots such as PCA described in this vignette.
+
+
+
+
+
+#Pre-filtering I: Only keep genes with >1 samples with non-zero read count ####  >>> NEW (in the original script this was being done individually for each stage)
+countData <- countData[rowSums(countData > 0) >= 2 , ]
+nrow(countData)
+
+
+
+#Make separate data sets for each developmental stage ####
+All_body_countdata <- countData[ ,-c(66:71)]
+All_body_coldata <- as.data.frame(colData[c(1:65), ])
+head(All_body_countdata)
+
+Instar5body_countdata <- subset(countData, select = c("P11917_102_S50", "P11917_103_S51", "P11917_105_S53", "P11917_106_S54", 
+                                                      "P11917_108_S56", "P11917_109_S57", "P11917_111_S59", "P11917_112_S60", "P11917_114_S62", 
+                                                      "P11917_115_S63", "P11917_117_S65", "P11917_118_S66", "P11917_120_S68", "P11917_121_S69", 
+                                                      "P11917_123_S70", "P11917_124_S71", "P11917_126_S73", "P11917_127_S74", "P11917_129_S76", 
+                                                      "P11917_130_S77", "P11917_132_S79", "P11917_133_S80", "P11917_135_S82", "P11917_136_S83", 
+                                                      "P11917_138_S85", "P11917_139_S86", "P11917_141_S88", "P11917_142_S89", "P11917_144_S91", 
+                                                      "P11917_145_S92", "P11917_147_S94", "P11917_148_S95", "P11917_150_S97", "P11917_151_S98", 
+                                                      "P11917_153_S100", "P11917_154_S101", "P11917_156_S103", "P11917_157_S104", "P11917_159_S106", 
+                                                      "P11917_160_S107", "P11917_162_S109", "P11917_163_S110", "P11917_165_S112", "P11917_166_S113"))
+Instar5body_coldata <- as.data.frame(colData[-c(1, 4, 7, 10, 13, 16, 19, 24, 27, 30, 33, 36, 39, 42, 45, 48, 51, 54, 57, 60, 63, 66:71), ])
+
+Instar3_countdata <- subset(countData, select = c("P11917_101_S49", "P11917_104_S52", "P11917_107_S55", 
+                                                 "P11917_110_S58", "P11917_113_S61", "P11917_116_S64", "P11917_119_S67", "P11917_125_S72", 
+                                                 "P11917_128_S75", "P11917_131_S78", "P11917_134_S81", "P11917_137_S84", "P11917_140_S87", 
+                                                 "P11917_143_S90", "P11917_146_S93", "P11917_149_S96", "P11917_152_S99", "P11917_155_S102", 
+                                                 "P11917_158_S105", "P11917_161_S108", "P11917_164_S111"))
+Instar3_coldata <- as.data.frame(colData[c(1, 4, 7, 10, 13, 16, 19, 24, 27, 30, 33, 36, 39, 42, 45, 48, 51, 54, 57, 60, 63), ])
+
+Instar5M_countdata <- subset(countData, select = c("P11917_102_S50", "P11917_105_S53", "P11917_108_S56", "P11917_111_S59", "P11917_114_S62", 
+                                                   "P11917_117_S65", "P11917_120_S68", "P11917_123_S70", "P11917_126_S73", "P11917_129_S76", 
+                                                   "P11917_132_S79", "P11917_135_S82", "P11917_138_S85", "P11917_141_S88", "P11917_144_S91", 
+                                                   "P11917_147_S94", "P11917_150_S97", "P11917_153_S100", "P11917_156_S103", "P11917_159_S106", 
+                                                   "P11917_162_S109", "P11917_165_S112"))
+
+Instar5M_coldata <- as.data.frame(colData[c(2, 5, 8, 11, 14, 17, 20, 22, 25, 28, 31, 34, 37, 40, 43, 46, 49, 52, 55, 58, 61, 64), ])
+
+Instar5F_countdata <- subset(countData, select = c("P11917_103_S51", "P11917_106_S54", "P11917_109_S57", "P11917_112_S60", "P11917_115_S63", 
+                                                   "P11917_118_S66", "P11917_121_S69", "P11917_124_S71", "P11917_127_S74", "P11917_130_S77", 
+                                                   "P11917_133_S80", "P11917_136_S83", "P11917_139_S86", "P11917_142_S89", "P11917_145_S92", 
+                                                   "P11917_148_S95", "P11917_151_S98", "P11917_154_S101", "P11917_157_S104", "P11917_160_S107", 
+                                                   "P11917_163_S110", "P11917_166_S113"))
+Instar5F_coldata <- as.data.frame(colData[c(3, 6, 9, 12, 15, 18, 21, 23, 26, 29, 32, 35, 38, 41, 44, 47, 50, 53, 56, 59, 62, 65), ])
+
+Instar3_coldata <- Instar3_coldata[ , 1:6]
+Instar5M_coldata <- Instar5M_coldata[ , 1:6]
+Instar5F_coldata <- Instar5F_coldata[ , 1:6]
+
+
+
+```
+
+
+#Filtering the data by removing genes with 0 counts in each dataset (first filtering removing all genes with 0 in the whole dataset done before partitioning the data). 
+1 count is added to the whole data set after filtering 0 counts genes. 
+Chech rows and colomns. 
+
+```{r filtering}
+#Pre-filtering II: for each developmental stage, remove genes with zero counts in all samples ####  
+Instar3_countdata <- Instar3_countdata[rowSums(Instar3_countdata > 0) >= 1 , ]
+nrow(Instar3_countdata)
+Instar5M_countdata <- Instar5M_countdata[rowSums(Instar5M_countdata > 0) >= 1 , ]
+nrow(Instar5M_countdata)
+Instar5F_countdata <- Instar5F_countdata[rowSums(Instar5F_countdata > 0) >= 1 , ]
+nrow(Instar5F_countdata)
+All_body_countdata <- All_body_countdata[rowSums(All_body_countdata > 0) >= 1 , ]
+nrow(All_body_countdata)
+Instar5body_countdata <- Instar5body_countdata[rowSums(Instar5body_countdata > 0) >=1 , ]
+nrow(Instar5body_countdata)
+
+
+## Add 1 count to every gene/sample (multiple zero-count samples take DESEQ off track)
+Instar3_countdata <- Instar3_countdata + 1
+head(Instar3_countdata)
+Instar5M_countdata <- Instar5M_countdata + 1
+head(Instar5M_countdata)
+Instar5F_countdata <- Instar5F_countdata + 1
+head(Instar5F_countdata)
+All_body_countdata <- All_body_countdata + 1
+head(All_body_countdata)
+Instar5body_countdata <- Instar5body_countdata + 1
+head(Instar5body_countdata)
+
+#Check all sample IDs in colData are also in CountData and match their orders ####
+all(rownames(colData) %in% colnames(countData))
+countData <- countData[, rownames(colData)]
+all(rownames(colData) == colnames(countData))
+
+all(rownames(All_body_coldata) %in% colnames(All_body_countdata))
+All_body_countdata <- All_body_countdata[, rownames(All_body_coldata)]
+all(rownames(All_body_coldata) == colnames(All_body_countdata))
+
+all(rownames(Instar3_coldata) %in% colnames(Instar3_countdata))
+Instar3_countdata <- Instar3_countdata[, rownames(Instar3_coldata)]
+all(rownames(Instar3_coldata) == colnames(Instar3_countdata))
+
+all(rownames(Instar5M_coldata) %in% colnames(Instar5M_countdata))
+Instar5M_countdata <- Instar5M_countdata[, rownames(Instar5M_coldata)]
+all(rownames(Instar5M_coldata) == colnames(Instar5M_countdata))
+
+all(rownames(Instar5F_coldata) %in% colnames(Instar5F_countdata))
+Instar5F_countdata <- Instar5F_countdata[, rownames(Instar5F_coldata)]
+all(rownames(Instar5F_coldata) == colnames(Instar5F_countdata))
+
+all(rownames(Instar5body_coldata) %in% colnames(Instar5body_countdata))
+Instar5body_countdata <- Instar5body_countdata[, rownames(Instar5body_coldata)]
+all(rownames(Instar5body_coldata) == colnames(Instar5body_countdata))
+
+```
+
+#Creating DE datasets
+design is the set up of the model Variables + ev interaction term
+
+```{r DE_datasets}
+#Create a DESeqDataSet from count matrix and labels (no confounding effects removed at this stage) ####
+ddsAll_Pop_Host <- DESeqDataSetFromMatrix(countData = countData,
+                                    colData = colData, design = ~Population+Hostplant)
+ddsAll_Pop_Host
+
+ddsAll_Body <- DESeqDataSetFromMatrix(countData = All_body_countdata,
+                                          colData = All_body_coldata, design = ~Population+Hostplant+Stage)
+ddsAll_Body
+
+ddsAll_Body_Host <- DESeqDataSetFromMatrix(countData = All_body_countdata,
+                                          colData = All_body_coldata, design = ~Population+Hostplant)
+ddsAll_Body_Host
+
+ddsAll_Body_interaction <- DESeqDataSetFromMatrix(countData = All_body_countdata,
+                                          colData = All_body_coldata, design = ~Population+Hostplant+Stage+Population:Hostplant)
+
+
+
+ddsInstar5_Body <- DESeqDataSetFromMatrix(countData = Instar5body_countdata,
+                                      colData = Instar5body_coldata, design = ~Hostplant+Population)
+ddsInstar5_Body
+
+ddsInstar5_Body2 <- DESeqDataSetFromMatrix(countData = Instar5body_countdata,
+                                      colData = Instar5body_coldata, design = ~Hostplant+Population+Sex)
+ddsInstar5_Body2
+
+ddsInstar3_Pop_Host <- DESeqDataSetFromMatrix(countData = Instar3_countdata,
+                                    colData = Instar3_coldata, design = ~Population+Hostplant)
+ddsInstar3_Pop_Host
+
+ddsInstar5M_Pop_Host <- DESeqDataSetFromMatrix(countData = Instar5M_countdata,
+                                  colData = Instar5M_coldata, design = ~Population+Hostplant)
+ddsInstar5M_Pop_Host
+
+ddsInstar5F_Pop_Host <- DESeqDataSetFromMatrix(countData = Instar5F_countdata,
+                                   colData = Instar5F_coldata, design = ~Population+Hostplant)
+ddsInstar5F_Pop_Host
+
+
+```
+
+#Filtering again
+
+```{r filtering2}
+#Pre-filtering IIIs: Only keep rows with baseMean >2 (usually this woulf be baseMean >1 but we added one count to every gene/sample)
+
+ddsAll_Pop_Host <- ddsAll_Pop_Host[rowMeans(counts(ddsAll_Pop_Host)) > 2, ]
+
+ddsAll_Body <- ddsAll_Body[rowMeans(counts(ddsAll_Body)) > 2, ]
+#ddsAll_Body
+ddsAll_Body_Host <- ddsAll_Body_Host[rowMeans(counts(ddsAll_Body_Host)) > 2, ]
+
+ddsInstar5_Body <- ddsInstar5_Body[rowMeans(counts(ddsInstar5_Body)) > 2, ]
+#ddsInstar5_Body
+
+ddsInstar3_Pop_Host <- ddsInstar3_Pop_Host[rowMeans(counts(ddsInstar3_Pop_Host)) > 2, ]
+#ddsInstar3_Pop_Host
+ddsInstar5M_Pop_Host <- ddsInstar5M_Pop_Host[rowMeans(counts(ddsInstar5M_Pop_Host)) > 2, ]
+#ddsInstar5M_Pop_Host
+ddsInstar5F_Pop_Host <- ddsInstar5F_Pop_Host[rowMeans(counts(ddsInstar5F_Pop_Host)) > 2, ]
+#ddsInstar5F_Pop_Host
+
+```
+
+#Running the actual DE analysis
+
+Extract the results by using contrast for each comparison
+
+```{r DEanalysis}
+# Without batch effect correction
+#ddsAll_Pop_Host <- DESeq(ddsAll_Pop_Host)
+#res_All_Pop_Host <- results(ddsAll_Pop_Host, alpha =.05)
+#res_All_Pop_Host
+#summary(res_All_Pop_Host)
+
+#res_All_Pop_Host_contr <- results(ddsAll_Pop_Host, alpha =.05, contrast = c("Population", "span", "swe") )
+#res_All_Pop_Host_contr
+#summary(res_All_Pop_Host_contr)
+
+ddsAll_Body <- DESeq(ddsAll_Body)
+res_All_Body <- results(ddsAll_Body, alpha =.05)
+res_All_Body
+summary(res_All_Body)
+
+ddsAll_Body_Host <- DESeq(ddsAll_Body_Host)
+res_All_Body_Host <- results(ddsAll_Body_Host, alpha =.05)
+res_All_Body_Host
+summary(res_All_Body_Host)
+
+
+
+res_All_Body_contr <- results(ddsAll_Body, alpha =.05, contrast = c("Population", "span", "swe") )
+#res_All_Body_contr
+summary(res_All_Body_contr)
+
+res_All_Body_contr_plant <- results(ddsAll_Body, alpha =.05, contrast = c("Hostplant", "Lot", "Dor") )
+#res_All_Body_contr_plant
+summary(res_All_Body_contr_plant)
+
+ddsAll_Body_interaction <- DESeq(ddsAll_Body_interaction)
+res_All_Body_interaction <- results(ddsAll_Body_interaction,alpha = .05)
+res_All_Body_interaction
+summary(res_All_Body_interaction)
+
+res_All_Body_interaction_hostplant <- results(ddsAll_Body_interaction,alpha = .05, contrast = c("Hostplant", "Lot", "Dor"))
+res_All_Body_interaction_hostplant
+summary(res_All_Body_interaction_hostplant)
+
+
+
+#not working?
+res_All_Body_interaction_popLot <- results(ddsAll_Body_interaction,alpha = .05, contrast = c("Population", "span", "swe"))
+res_All_Body_interaction_popLot
+summary(res_All_Body_interaction_popLot)
+
+
+
+ddsInstar5_Body <- DESeq(ddsInstar5_Body)
+res_Instar5_Body <- results(ddsInstar5_Body, alpha =.05)
+#res_Instar5_Body
+summary(res_Instar5_Body)
+
+res_Instar5_Body_contr_plant <- results(ddsInstar5_Body, alpha =.05, contrast = c("Hostplant", "Lot", "Dor") )
+summary(res_Instar5_Body_contr_plant)
+
+ddsInstar5_Body2 <- DESeq(ddsInstar5_Body2)
+res_Instar5_Body2 <- results(ddsInstar5_Body2, alpha =.05)
+#res_Instar5_Body2
+summary(res_Instar5_Body2)
+
+res_Instar5_Body2_hostplant <- results(ddsInstar5_Body2, alpha =.05, contrast= c("Hostplant", "Lot", "Dor"))
+#res_Instar5_Body2_hostplant
+summary(res_Instar5_Body2_hostplant)
+
+res_Instar5_Body2_pop <- results(ddsInstar5_Body2, alpha =.05, contrast= c("Population", "span", "swe"))
+#res_Instar5_Body2_pop
+summary(res_Instar5_Body2_pop)
+
+
+
+ddsInstar3_Pop_Host <- DESeq(ddsInstar3_Pop_Host)
+res_Instar3_Pop_Host <- results(ddsInstar3_Pop_Host, alpha=.05)
+summary(res_Instar3_Pop_Host)
+res_Instar3_contr1_Pop <- results(ddsInstar3_Pop_Host, alpha=.05, contrast = c("Population", "span", "swe"))
+summary(res_Instar3_contr1_Pop)
+
+ddsInstar5M_Pop_Host <- DESeq(ddsInstar5M_Pop_Host)
+res_Instar5M_Pop_Host <- results(ddsInstar5M_Pop_Host, alpha=.05)
+summary(res_Instar5M_Pop_Host)
+
+res_Instar5M_contr1_Pop <- results(ddsInstar5M_Pop_Host, alpha=.05, contrast = c("Population", "span", "swe"))
+summary(res_Instar5M_contr1_Pop)
+
+ddsInstar5F_Pop_Host <- DESeq(ddsInstar5F_Pop_Host)
+res_Instar5F_Pop_Host <- results(ddsInstar5F_Pop_Host, alpha=.05)
+summary(res_Instar5F_Pop_Host)
+
+res_Instar5F_contr1_Pop <- results(ddsInstar5F_Pop_Host, alpha=.05, contrast = c("Population", "span", "swe"))
+summary(res_Instar5F_contr1_Pop)
+
+```
+
+
+```{r filter III}
+#filter result only keep basemean over 10 
+#
+#Filtered_P0.05_base_Mean_10_Instar <- subset(Filtered_P0.05_Instar3_Pop_Host, baseMean>10
+Filtered_BM10_res_all_body <- subset(res_All_Body, baseMean>10)
+Filtered_BM10_res_all_body_host <- subset(res_All_Body_Host, baseMean>10)
+
+
+
+```
+
+
+
+#Visualisation of the data
+
+```{r visualisation}
+#plotting the results
+#MA plot
+par(mfrow=c(2,2))
+plotMA(res_All_Body_contr_plant, main= "All, Lot vs Dor")
+plotMA(res_Instar3_Pop_Host, main="Instar3, Lot vs Dor")
+plotMA(res_Instar5M_Pop_Host, main="Instar5M, Lot vs Dor")
+plotMA(res_Instar5F_Pop_Host, main="Instar5F, Lot vs Dor")
+plotMA(res_All_Body_contr, main="All, span vs swe")
+plotMA(res_Instar3_contr1_Pop, main="Instar3, span vs swe")
+plotMA(res_Instar5M_contr1_Pop, main="Instar5M, span vs swe")
+plotMA(res_Instar5F_contr1_Pop, main="Instar5F, span vs swe")
+
+plotCounts(ddsAll_Body, gene=which.min(res_All_Body$padj), intgroup="Hostplant", xlab = "All")
+plotCounts(ddsInstar3_Pop_Host, gene=which.min(res_Instar3_Pop_Host$padj), intgroup="Hostplant", xlab = "Instar 3")
+plotCounts(ddsInstar5M_Pop_Host, gene=which.min(res_Instar5M_Pop_Host$padj), intgroup="Hostplant", xlab = "Instar 5 Male")
+plotCounts(ddsInstar5F_Pop_Host, gene=which.min(res_Instar5F_Pop_Host$padj), intgroup="Hostplant", xlab = "Instar 5 Female")
+
+#heatmap
+#install.packages("pheatmap")
+library("pheatmap")
+
+#try sorting in pheatmap command, it works!
+All_Body.ntd <- normTransform(ddsAll_Body)
+select_All_Body <- order(rowMeans(counts(ddsAll_Body,normalized=TRUE)),
+                             decreasing=TRUE)
+
+All_Body.df <- as.data.frame(colData(ddsAll_Body)[,c("Population", "Hostplant")])
+pheatmap(assay(All_Body.ntd)[select_All_Body,order(All_Body.ntd$Hostplant)], cluster_rows=FALSE, show_rownames=FALSE,
+         cluster_cols=FALSE, annotation_col=All_Body.df)
+
+#cluster columns
+All_Body.df <- as.data.frame(colData(ddsAll_Body)[,c("Population", "Hostplant", "Stage")])
+pheatmap(assay(All_Body.ntd)[select_All_Body,order(All_Body.ntd$Hostplant)], cluster_rows=FALSE, show_rownames=FALSE,
+         cluster_cols=TRUE, annotation_col=All_Body.df)
+
+
+
+#adds a clustertree to columns
+# pheatmap(assay(All_Body.ntd)[select_All_Body,], cluster_rows=FALSE, show_rownames=FALSE,
+#          cluster_cols=TRUE, annotation_col=All_Body.df)
+# 
+# #adds a clustertree to rows
+# pheatmap(assay(All_Body.ntd)[select_All_Body,], cluster_rows=TRUE, show_rownames=FALSE,
+#          cluster_cols=FALSE, annotation_col=All_Body.df)
+# 
+# #not working
+# All_Body2.df <- as.data.frame(colData(ddsAll_Body)[,"Stage"])
+# pheatmap(assay(All_Body.ntd)[select_All_Body,], cluster_rows=FALSE, show_rownames=FALSE,
+#          cluster_cols=FALSE, annotation_col=All_Body2.df)
+# 
+# # changes order of pop and hostplant but not clustering
+# All_Body2.df <- as.data.frame(colData(ddsAll_Body)[,c("Population", "Hostplant")])
+# pheatmap(assay(All_Body.ntd)[select_All_Body,], cluster_rows=FALSE, show_rownames=FALSE,
+#          cluster_cols=FALSE, annotation_col=All_Body2.df)
+
+
+#Instar5
+Instar5_Body.ntd <- normTransform(ddsInstar5_Body)
+select_Instar5_Body <- order(rowMeans(counts(ddsInstar5_Body,normalized=TRUE)),
+                             decreasing=TRUE)
+Instar5_Body.df <- as.data.frame(colData(ddsInstar5_Body)[,c("Population", "Hostplant")])
+pheatmap(assay(Instar5_Body.ntd)[select_Instar5_Body,order(Instar5_Body.ntd$Hostplant)], cluster_rows=FALSE, show_rownames=FALSE,
+         cluster_cols=FALSE, annotation_col=Instar5_Body.df)
+
+#cluster columns
+Instar5_Body.ntd <- normTransform(ddsInstar5_Body)
+select_Instar5_Body <- order(rowMeans(counts(ddsInstar5_Body,normalized=TRUE)),
+                             decreasing=TRUE)
+Instar5_Body.df <- as.data.frame(colData(ddsInstar5_Body)[,c("Population", "Hostplant")])
+pheatmap(assay(Instar5_Body.ntd)[select_Instar5_Body,order(Instar5_Body.ntd$Hostplant)], cluster_rows=FALSE, show_rownames=FALSE,
+         cluster_cols=TRUE, annotation_col=Instar5_Body.df)
+
+#Instar3
+Instar3.ntd <- normTransform(ddsInstar3_Pop_Host)
+select_Instar3 <- order(rowMeans(counts(ddsInstar3_Pop_Host,normalized=TRUE)),
+                             decreasing=TRUE)
+Instar3.df <- as.data.frame(colData(ddsInstar3_Pop_Host)[,c("Population", "Hostplant")])
+pheatmap(assay(Instar3.ntd)[select_Instar3,order(Instar3.ntd$Hostplant)], cluster_rows=FALSE, show_rownames=FALSE,
+         cluster_cols=FALSE, annotation_col=Instar3.df)
+
+# #cluster columns
+# #Instar3
+Instar3.ntd <- normTransform(ddsInstar3_Pop_Host)
+select_Instar3 <- order(rowMeans(counts(ddsInstar3_Pop_Host,normalized=TRUE)),
+                             decreasing=TRUE)
+Instar3.df <- as.data.frame(colData(ddsInstar3_Pop_Host)[,c("Population", "Hostplant")])
+pheatmap(assay(Instar3.ntd)[select_Instar3,order(Instar3.ntd$Hostplant)], cluster_rows=FALSE, show_rownames=FALSE,
+         cluster_cols=TRUE, annotation_col=Instar3.df)
+```
+
+
+
+
+
+```{r pca}
+
+#PCA
+library(ggplot2)
+All_Body.vsd <- varianceStabilizingTransformation(ddsAll_Body, blind = T)
+plotPCA(All_Body.vsd, intgroup=c("Hostplant","Population")) + theme_minimal() + ggtitle("PCA All")
+
+
+# All_Body_Host.vsd <- varianceStabilizingTransformation(ddsAll_Body_Host, blind = T)
+# plotPCA(All_Body_Host.vsd, intgroup=c("Hostplant","Population")) + theme_minimal() + ggtitle("PCA All_Host")
+
+plotPCA(All_Body.vsd, intgroup=c("Hostplant", "Population", "Stage")) + 
+     geom_point(aes(colour=Hostplant, fill=Population, shape = Stage), size = 4) +
+     theme_minimal() + 
+     scale_fill_manual(values = c("transparent", "white")) +
+ scale_shape_manual(values = c(1,6))
+
+#use only the data from plotPCA and then plot with ggplot
+All_body_pca<-plotPCA(All_Body.vsd, intgroup=c("Hostplant","Population", "Stage"), returnData = T)
+head(All_body_pca)
+write.table(All_body_pca, file = "all_body_pca.txt")
+
+
+All_body_pca1 <- read.table(file = "all_body_pca.txt")
+
+
+All_body_pca <- read.table("all_body_pca.txt")
+#size is added just to get the legend right 
+ggplot(All_body_pca, aes(x=PC1, 
+                         y=PC2,
+                         colour = Hostplant,
+                         fill=interaction(Population,Hostplant),
+                         shape = Stage, 
+                         size = Population)) +
+  geom_point(stroke = 1) +
+  scale_fill_manual(values = c("orangered4", "transparent", "orange2", "transparent"),
+                    guide = "none") +
+  scale_colour_manual(values = c("orangered4", "orange2"),
+                      labels = c("L. dorycnium", "L. corniculatus"),
+                      guide =
+                      guide_legend(label.theme = element_text(face = "italic"),
+                                   order = 1,
+                                   override.aes = list(size = 4))) +
+  scale_shape_manual(values = c(21,25),
+                     labels = c("III", "V"),
+                     guide =
+                       guide_legend(override.aes = list(size = 4),
+                                    order = 2)) +
+  scale_size_manual(name = "Population",
+                    values = c(4, 4.01), 
+                    labels = c("Catalonia", "Sweden"),
+                    guide = guide_legend(override.aes = list(shape = c(16,1)),
+                                         order = 2)) +
+  labs(x = "PC1: 22% variance", y = "PC2: 18% variance") +
+  theme(panel.border = element_blank(), 
+          axis.line = element_line(color = 'black'),
+          axis.text.x = element_text(size = 12),
+        axis.title.x = element_text(size = 12),
+          axis.text.y = element_text(size = 12),
+        axis.title.y = element_text(size = 12),
+          panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), 
+        legend.key = element_blank(),
+          legend.text = element_text(size = 12))
+  
+        #legend.text = element_text(text() angle = 0, size = 12, face = "italic)) #green version
+ggplot(All_body_pca, aes(x=PC1, 
+                         y=PC2,
+                         colour = Hostplant,
+                         fill=interaction(Population,Hostplant),
+                         shape = Stage, 
+                         size = Population)) +
+  geom_point(stroke = 1) +
+  scale_fill_manual(values = c("chartreuse4", "transparent", "chartreuse2", "transparent"),
+                    guide = "none") +
+  scale_colour_manual(values = c("chartreuse4", "chartreuse2"),
+                      labels = c("L. dorycnium", "L. corniculatus"),
+                      guide =
+                      guide_legend(label.theme = element_text(face = "italic"),
+                                   order = 1,
+                                   override.aes = list(size = 4))) +
+  scale_shape_manual(values = c(21,25),
+                     labels = c("III", "V"),
+                     guide =
+                       guide_legend(override.aes = list(size = 4),
+                                    order = 2)) +
+  scale_size_manual(name = "Population",
+                    values = c(4, 4.01), 
+                    labels = c("Catalonia", "Sweden"),
+                    guide = guide_legend(override.aes = list(shape = c(16,1)),
+                                         order = 2)) +
+  labs(title = "All", x = "PC1: 22% variance", y = "PC2: 18% variance") +
+  xlim(-80, 90) +
+  ylim(-50, 75) +
+  theme(panel.border = element_blank(), 
+        axis.line = element_line(color = 'black'),
+        axis.text.x = element_text(size = 12),
+        axis.title.x = element_text(size = 16),
+        axis.text.y = element_text(size = 12),
+        axis.title.y = element_text(size = 16),
+        panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), 
+        legend.key = element_blank(),
+        legend.text = element_text(size = 12), 
+        legend.title = element_text(size = 16), 
+        title = element_text(size = 20))
+  
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+All_Body_interaction.vsd <- varianceStabilizingTransformation(ddsAll_Body_interaction, blind = T)
+plotPCA(All_Body_interaction.vsd, intgroup=c("Hostplant","Population")) + theme_minimal() + ggtitle("PCA All Interaction")
+
+par(mfrow=c(2,2))
+plotPCA(All_Body.vsd, intgroup=c("Hostplant","Population", "Stage")) + theme_minimal()
+plotPCA(All_Body.vsd, intgroup=c("Stage")) + theme_minimal() + ggtitle("PCA All Instar 3 vs 5")
+plotPCA(All_Body.vsd, intgroup=c("Population")) + theme_minimal() + ggtitle("PCA All Population")
+plotPCA(All_Body.vsd, intgroup=c("Hostplant")) + theme_minimal() + ggtitle("PCA All Hostplant")
+
+Instar5_Body.vsd <- varianceStabilizingTransformation(ddsInstar5_Body, blind = T)
+pcaInstar5_body <- plotPCA(Instar5_Body.vsd, intgroup=c("Population", "Hostplant")) + ggtitle("PCA Instar 5")
+plotPCA(Instar5_Body.vsd, intgroup=c("Hostplant")) + theme_minimal() + ggtitle("PCA Instar 5 Hostplant")
+plotPCA(Instar5_Body.vsd, intgroup=c("Population")) + theme_minimal() + ggtitle("PCA Instar 5 Population")
+plotPCA(Instar5_Body.vsd, intgroup=c("Sex")) + theme_minimal() + ggtitle("PCA Instar 5 Sex")
+plotPCA(Instar5_Body.vsd, intgroup=c("Family")) + theme_minimal() + ggtitle("PCA Instar 5 Family")
+
+InstarV_pca<-plotPCA(Instar5_Body.vsd, intgroup=c("Hostplant","Population"), returnData = T)
+head(InstarV_pca)
+write.table(InstarV_pca, file = "InstarV_pca.txt")
+
+InstarV_pca <- read.table("InstarV_pca.txt")
+
+ggplot(InstarV_pca, aes(x=PC1, 
+                         y=PC2,
+                         colour = Hostplant,
+                         fill=interaction(Population,Hostplant),
+                         size = Population)) +
+  geom_point(shape = 25, stroke = 1) +
+  scale_fill_manual(values = c("chartreuse4", "transparent", "chartreuse2", "transparent"),
+                    guide = "none") +
+  scale_colour_manual(values = c("chartreuse4", "chartreuse2"),
+                      labels = c("L. dorycnium", "L. corniculatus"),
+                      guide =
+                      guide_legend(label.theme = element_text(face = "italic"),
+                                   order = 1,
+                                   override.aes = list(size = 4, shape = 16))) +
+  # #scale_shape_manual(values = c(21,25),
+  #                    labels = c("III", "V"),
+  #                    guide =
+  #                      guide_legend(override.aes = list(size = 4),
+  #                                   order = 2)) +
+  scale_size_manual(name = "Population",
+                    values = c(4, 4.01), 
+                    labels = c("Catalonia", "Sweden"),
+                    guide = guide_legend(override.aes = list(shape = c(16,1)),
+                                         order = 2)) +
+  labs(title = "InstarV", x = "PC1: 27% variance", y = "PC2: 17% variance") +
+  xlim(-80, 90) +
+  ylim(-50, 75) +
+  theme(panel.border = element_blank(), 
+          axis.line = element_line(color = 'black'),
+          axis.text.x = element_text(size = 12),
+        axis.title.x = element_text(size = 16),
+          axis.text.y = element_text(size = 12),
+        axis.title.y = element_text(size = 16),
+          panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), 
+        legend.key = element_blank(),
+          legend.text = element_text(size = 12), 
+        legend.title = element_text(size = 16),
+        title = element_text(size = 20))
+  
+
+Instar3.vsd <- varianceStabilizingTransformation(ddsInstar3_Pop_Host, blind = T)
+plotPCA(Instar3.vsd, intgroup=c("Population", "Hostplant")) + theme_minimal() + ggtitle("PCA Instar 3")
+plotPCA(Instar3.vsd, intgroup=c("Hostplant")) + theme_minimal() + ggtitle("PCA Instar 3 Hostplant")
+plotPCA(Instar3.vsd, intgroup=c("Population")) + theme_minimal() + ggtitle("PCA Instar 3 Population")
+plotPCA(Instar3.vsd, intgroup=c("Family")) + theme_minimal() + ggtitle("PCA Instar 3 Family")
+
+InstarIII_pca<-plotPCA(Instar3.vsd, intgroup=c("Hostplant","Population"), returnData = T)
+head(InstarIII_pca)
+write.table(InstarIII_pca, file = "InstarIII_pca.txt")
+
+InstarIII_pca <- read.table("InstarIII_pca.txt")
+
+
+ggplot(InstarIII_pca, aes(x=PC1, 
+                         y=PC2,
+                         colour = Hostplant,
+                         fill=interaction(Population,Hostplant),
+                         size = Population)) +
+  geom_point(shape = 21, stroke = 1) +
+  scale_fill_manual(values = c("chartreuse4", "transparent", "chartreuse2", "transparent"),
+                    guide = "none") +
+  scale_colour_manual(values = c("chartreuse4", "chartreuse2"),
+                      labels = c("L. dorycnium", "L. corniculatus"),
+                      guide =
+                      guide_legend(label.theme = element_text(face = "italic"),
+                                   order = 1,
+                                   override.aes = list(size = 4, shape = 16))) +
+  # #scale_shape_manual(values = c(21,25),
+  #                    labels = c("III", "V"),
+  #                    guide =
+  #                      guide_legend(override.aes = list(size = 4),
+  #                                   order = 2)) +
+  scale_size_manual(name = "Population",
+                    values = c(4, 4.01), 
+                    labels = c("Catalonia", "Sweden"),
+                    guide = guide_legend(override.aes = list(shape = c(16,1)),
+                                         order = 2)) +
+  labs(title = "InstarIII", x = "PC1: 42% variance", y = "PC2: 13% variance") +
+  xlim(-80, 90) +
+  ylim(-50, 75) +
+  theme(panel.border = element_blank(), 
+          axis.line = element_line(color = 'black'),
+          axis.text.x = element_text(size = 12),
+        axis.title.x = element_text(size = 16),
+          axis.text.y = element_text(size = 12),
+        axis.title.y = element_text(size = 16),
+          panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), 
+        legend.key = element_blank(),
+          legend.text = element_text(size = 12), 
+        legend.title = element_text(size = 16),
+        title = element_text(size = 20))
+
+
+```

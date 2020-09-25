@@ -1,0 +1,5 @@
+"" "GeneName" "GO.ID" "Term" "Annotated" "Significant" "Expected" "weight" "ENTREZID" "GENENAME" "Cohort"
+"1" "amy" "GO:0005576" "extracellular region" 44 3 0.21 "0.00037" "36932" "Amylase distal" "instar5Fspan"
+"2" "amy" "GO:0005576" "extracellular region" 44 3 0.21 "0.00037" "250484" "amethyst" "instar5Fspan"
+"3" "amy" "GO:0005576" "extracellular region" 44 3 0.21 "0.00037" "47764" "Amylase proximal" "instar5Fspan"
+"4" "lip1" "GO:0005576" "extracellular region" 44 3 0.21 "0.00037" "43973" "Lipase 1" "instar5Fspan"

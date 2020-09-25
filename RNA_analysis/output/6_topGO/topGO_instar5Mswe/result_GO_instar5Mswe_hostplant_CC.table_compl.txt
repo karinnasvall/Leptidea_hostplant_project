@@ -1,0 +1,8 @@
+"" "GeneName" "GO.ID" "Term" "Annotated" "Significant" "Expected" "weight" "ENTREZID" "GENENAME" "Cohort"
+"1" "lva" "GO:0000137" "Golgi cis cisterna" 3 1 0.04 "0.041" "31350" "lava lamp" "instar5Mswe"
+"2" "nrg" "GO:0005919" "pleated septate junction" 1 1 0.01 "0.014" "31792" "Neuroglian" "instar5Mswe"
+"3" "nrg" "GO:0030175" "filopodium" 3 1 0.04 "0.041" "31792" "Neuroglian" "instar5Mswe"
+"4" "nrg" "GO:0035230" "cytoneme" 3 1 0.04 "0.041" "31792" "Neuroglian" "instar5Mswe"
+"5" "y" "GO:0070451" "cell hair" 1 1 0.01 "0.014" "31166" "alpha actinin" "instar5Mswe"
+"6" "y" "GO:0070451" "cell hair" 1 1 0.01 "0.014" "5657611" "anon-65Bb" "instar5Mswe"
+"7" "y" "GO:0070451" "cell hair" 1 1 0.01 "0.014" "30980" "yellow" "instar5Mswe"

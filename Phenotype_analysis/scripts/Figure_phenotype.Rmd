@@ -1,0 +1,194 @@
+---
+title: "Hostplant_figures_ms"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##Hostplant figures
+dev time, wing length, wing area
+
+
+```{r data_dev}
+library(ggplot2)
+
+# Read in the data
+df <- read.delim("2018_dev_time.txt", 
+               header = TRUE, 
+               quote="\"", 
+               stringsAsFactors= TRUE, 
+               strip.white = TRUE)
+
+# Print out `df`
+#print(df)
+
+# Check structure of data
+#names(df)
+str(df)
+# Check summary of data
+summary(df)
+```
+
+
+```{r data ggplot}
+library(ggplot2)
+
+#change names
+levels(df$Host_plant)
+#[1] "Dor"   "Lotus"
+levels(df$Host_plant) <- c("L. dorycnium", "L. corniculatus")
+
+levels(df$Population)
+#[1] "Cat" "Swe"
+levels(df$Population) <- c("Catalonia", "Sweden")
+
+#make dataframe with p-values for the plot
+
+p_dev_label2 <- data.frame(Population = c("Catalonia", "Sweden"), lab_dev = c("p-value == 2.2 %*% 10^{-16}", "p-value == 5.8 %*% 10^{-7}"))
+
+
+#have to use only variable in facet_grid (Population not df$Population), and use variable name Population in the label dataframe, then geom_text can use the new datarame and fine the facets from facet_grid...
+
+#larger text and nicer look, green
+ggplot(df, aes(df$Host_plant, df$Dev_time)) +
+  geom_boxplot(aes(fill=interaction(df$Population, df$Host_plant)), outlier.shape=1) + 
+  facet_grid(~Population) + 
+  scale_fill_manual(values = c("chartreuse4", "chartreuse4","chartreuse2", "chartreuse2")) + 
+  labs(x = "", y = "Development time (days)", size=20) +
+  scale_y_continuous(breaks = seq(10,50,5), limits = c(18,46)) +
+  theme(panel.border = element_rect(color = "black", fill = alpha("white", 0), size = 2),
+        strip.text.x = element_text(size = 20),
+        strip.background = element_rect(colour = "black", fill = "white", size = 2),
+          axis.text.x = element_text(angle = 0, size = 20, face = "italic", hjust=0.5),
+          axis.text.y = element_text(size = 16),
+          axis.title.y = element_text(size = 20),
+          panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(),
+          legend.position = "none") +
+   geom_text(
+               data    = p_dev_label2,
+               mapping = aes(x = 2, y = 19, label = p_dev_label2$lab_dev), size = 5)
+
+```
+##Wing size
+
+```{r wing size}
+# Read in the data
+df <- read.delim("Input_table.txt", 
+               header = TRUE, 
+               quote="\"", 
+               stringsAsFactors= TRUE, 
+               strip.white = TRUE)
+
+# Print out `df`
+print(df)
+
+# Check structure of data
+names(df)
+str(df)
+# Check summary of data
+summary(df)
+
+#change level names
+levels(df$Population) <- c("Catalonia", "Sweden")
+levels(df$Host_plant)<- c("L. dorycnium", "L. corniculatus")
+
+data_length <- data.frame(Population = c("Catalonia", "Sweden"), lab_length = c("p-value == 2.2 %*% 10^{-16}", "p-value == 5.1 %*% 10^{-10}"))
+data_size <- data.frame(Population = c("Catalonia", "Sweden"), lab_size = c("p-value == 2.2 %*% 10^{-16}", "p-value == 3.7 %*% 10^{-10}"))
+
+####
+#wing length
+
+ggplot(df, aes(df$Host_plant, df$Wing_length)) +
+  geom_boxplot(aes(fill=interaction(df$Population, df$Host_plant)), outlier.shape=1) + 
+  facet_grid(~Population) + 
+  scale_fill_manual(values = c("chartreuse4", "chartreuse4","chartreuse2", "chartreuse2")) + 
+  labs(x = "", y = "Wing length (mm)", size=20) +
+  scale_y_continuous(limits = c(850, 1400), breaks = seq(900, 1400, 100)) +
+  theme(panel.border = element_rect(color = "black", fill = alpha("white", 0), size = 2),
+        strip.text.x = element_text(size = 20),
+        strip.background = element_rect(colour = "black", fill = "white", size = 2),
+          axis.text.x = element_text(angle = 0, size = 20, face = "italic", hjust=0.5),
+          axis.text.y = element_text(size = 16),
+          axis.title.y = element_text(size = 20),
+          panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(),
+          legend.position = "none") +
+   geom_text(
+               data    = data_length,
+               mapping = aes(x = 2, y = 1370, label = data_length$lab_length), parse = TRUE, size = 5)
+
+
+#wing area
+#green
+ggplot(df, aes(df$Host_plant, df$Wing_size)) +
+  geom_boxplot(aes(fill=interaction(df$Population, df$Host_plant)), outlier.shape=1) + 
+  facet_grid(~Population) + 
+  scale_fill_manual(values = c("chartreuse4", "chartreuse4","chartreuse2", "chartreuse2")) + 
+  labs(x = "", y = "Wing area (pixels)", size=20) +
+  scale_y_continuous(limits = c(15000, 45000), breaks = seq(15000, 45000, 5000)) +
+  theme(panel.border = element_rect(color = "black", fill = alpha("white", 0), size = 2),
+        strip.text.x = element_text(size = 20),
+        strip.background = element_rect(colour = "black", fill = "white", size = 2),
+          axis.text.x = element_text(angle = 0, size = 20, face = "italic", hjust=0.5),
+          axis.text.y = element_text(size = 16),
+          axis.title.y = element_text(size = 20),
+          panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(),
+          legend.position = "none") +
+   geom_text(
+               data    = data_size,
+               mapping = aes(x = 2, y = 44000, label = data_size$lab_size), parse = TRUE, size = 5)
+
+
+
+
+```
+
+
+
+```{r preference}
+df <- read.delim("Preference_data2.txt", 
+               header = TRUE, 
+               quote="\"",
+               stringsAsFactors= TRUE, 
+               strip.white = TRUE)
+#
+#data_long <- gather(olddata_wide, condition, measurement, control:cond2, factor_key=TRUE)
+df$ID <- as.factor(df$ID)
+
+library(tidyr)
+df_long <- gather(df, Hostplant, Nr_of_eggs, DORYCNIUM:LOTUS, factor_key = T)
+
+levels(df_long$Hostplant)<- c("L. dorycnium", "L. corniculatus")
+levels(df_long$Hostplant)
+
+data_pref <- data.frame(Population = c("Catalonia", "Sweden", "Sweden_no_choice"), lab_pref = c("p-value == 0.93", "p-value == 1.3 %*% 10^{-4}", "p-value == 9.9 %*% 10^{-3}"))
+
+
+#green
+ggplot(df_long, aes(df_long$Hostplant, df_long$Nr_of_eggs)) +
+  geom_boxplot(aes(fill=interaction(df_long$Population, df_long$Hostplant)), outlier.shape=1) + 
+  facet_grid(~Population) + 
+  scale_fill_manual(values = c("chartreuse4", "chartreuse4","chartreuse4", "chartreuse2", "chartreuse2", "chartreuse2")) + 
+  labs(x = "", y = "Number of eggs laid", size=20) + 
+  scale_y_continuous(limits = c(0,46), breaks = seq(0,45,10)) +
+  theme(panel.border = element_rect(color = "black", fill = alpha("white", 0), size = 2),
+        strip.text.x = element_text(size = 20),
+        strip.background = element_rect(colour = "black", fill = "white", size = 2),
+          axis.text.x = element_text(angle = 0, size = 20, face = "italic", hjust=0.5),
+          axis.text.y = element_text(size = 16),
+          axis.title.y = element_text(size = 20),
+          panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(),
+          legend.position = "none") +
+   geom_text(
+               data    = data_pref,
+               mapping = aes(x = 2, y = 45, label = data_pref$lab_pref), parse = TRUE, size = 5)
+
+
+
+```
+

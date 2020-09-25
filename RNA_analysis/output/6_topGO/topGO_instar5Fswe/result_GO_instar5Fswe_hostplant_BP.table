@@ -1,0 +1,4 @@
+"","GeneName","GO.ID","Term","Annotated","Significant","Expected","weight","ENTREZID","GENENAME"
+"1","lva","GO:0007349","cellularization",22,1,0.03,"0.0335","31350","lava lamp"
+"2","lva","GO:0050775","positive regulation of dendrite morphogenesis",3,1,0,"0.0046","31350","lava lamp"
+"3","lva","GO:0051683","establishment of Golgi localization",2,1,0,"0.0030","31350","lava lamp"

@@ -1,0 +1,3 @@
+"" "GeneName" "GO.ID" "Term" "Annotated" "Significant" "Expected" "weight" "ENTREZID" "GENENAME" "Cohort"
+"1" "lva" "GO:0008017" "microtubule binding" 19 1 0.03 "0.0304" "31350" "lava lamp" "instar5Fswe"
+"2" "lva" "GO:0030507" "spectrin binding" 1 1 0 "0.0016" "31350" "lava lamp" "instar5Fswe"

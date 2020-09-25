@@ -1,0 +1,112 @@
+---
+title: "RNA_hostplant_topGO"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+```{r get_data}
+sessionInfo()
+library(topGO)
+library(org.Dm.eg.db)
+library(AnnotationDbi)
+
+#create gene universe from gene list created with Stringtie where the gene names in orthologos to D. melanogaster is included. 
+#select genes that are differentially expresssed from the different DE-datasets 
+
+#first create gene universe with geneID 
+geneUniv=read.table("gene_list_sin_dmel_stringtie.txt", header = T)
+
+#background genes with only D.mel names
+bg_genes<-as.character(geneUniv[,2])
+#get rid of the "-" (unannotated genes) 
+bg_genes_filtered <- as.character(subset(bg_genes, !bg_genes== "-"))
+
+#DE genes in Cat instar3
+candidateGenes <- read.table("../../Results/4_DEseq2/06_Spa_Hostplant_effect/Filtered_base_Mean_10_LFC_1.0_P0.05_Instar3_Spa_Host.txt", header = T)
+candidateGenes$GeneID <- rownames(candidateGenes)
+length(candidateGenes)
+
+#get the D mel gene names for the candidate genes
+canditateGenes_Dmel <- merge(candidateGenes, geneUniv, by.x="GeneID", by.y="GeneID")
+
+candidateGenes_filtered <- as.character(subset(canditateGenes_Dmel$GeneName, !canditateGenes_Dmel$GeneName=="-"))
+length(candidateGenes_filtered) #33 genes
+length(bg_genes_filtered) #10926
+# GeneName to GO mapping needed. 
+
+#Change the problematic genenames?
+#
+#for(j in seq_along(words)){
+#  DF$Sentences <- gsub(words[j], trans[j], DF$Sentences)
+#}
+#check that the replacement list is of equal length
+length(candidateGenes_instar5Fspan_old_list) == length(candidateGenes_instar5Fspan_Dmel_new_list)
+#Forloop to replace the genenames
+for(j in seq_along(candidateGenes_instar5Fspan_old_list)){
+  bg_instar5Fspan_Dmel_list_corr <- gsub(candidateGenes_instar5Fspan_old_list[j], candidateGenes_instar5Fspan_Dmel_new_list[j], bg_instar5Fspan_Dmel_list)
+}
+#
+#replace(x, list, values), replace replaces the values in x with indices given in list by those given in values
+bg_instar5Fspan_test_list <- replace(bg_instar5Fspan_Dmel_list, list = candidateGenes_instar5Fspan_old_list, candidateGenes_instar5Fspan_Dmel_new_list)
+
+
+
+GOtoalias_dmel <- annFUN.org("BF", feasibleGenes = candidateGenes_filtered, mapping = "org.Dm.eg.db", ID = "Alias")
+GeneIDtoGOex <- inverseList(GOtoalias_dmel) # only 6 genes with annotations
+GOtoalias_dmel_MF <- annFUN.org("MF", feasibleGenes = candidateGenes_filtered, mapping = "org.Dm.eg.db", ID = "Alias")
+GeneIDtoGOex_MF <- inverseList(GOtoalias_dmel_MF) # only 6 genes with annotations
+
+GOtoalias_dmel_CC <- annFUN.org("CC", feasibleGenes = candidateGenes_filtered, mapping = "org.Dm.eg.db", ID = "Alias")
+GeneIDtoGOex_CC <- inverseList(GOtoalias_dmel_CC) # only 6 genes with annotations
+
+
+geneList_ex <- factor(as.integer(bg_genes_filtered %in% candidateGenes_filtered))
+names(geneList_ex) <- bg_genes_filtered
+str(geneList_ex)
+
+sampleGOdata_ex_BP <- new(Class = "topGOdata", description="test_session", ontology="BP", allGenes=geneList_ex, annot=annFUN.org, mapping = "org.Dm.eg.db", ID = "Alias")
+#get a short summary
+sampleGOdata_ex_BP
+#run a significance test
+weight_fisher_result=runTest(sampleGOdata_ex_BP, algorithm='weight01', statistic='fisher')
+#get the result
+weight_fisher_result
+#get the p-values with score
+weight_fisher_result_pvalues <- score(weight_fisher_result)
+#more results
+geneData(weight_fisher_result)
+#Write results in table
+results_table_ex <- GenTable(object = sampleGOdata_ex_BP, weight=weight_fisher_result, orderBy="weight", topNodes=20)
+results_table_ex
+sort(results_table_ex[ ,1])
+#get only sign enriched GOterms
+sort(subset(results_table_ex, results_table_ex$weight <= 0.05)[ ,1])
+
+#checking the distribution of annotations
+results_table_ex_long <- GenTable(object = sampleGOdata_ex_BP, weight=weight_fisher_result, orderBy="weight", topNodes=1000)
+hist(results_table_ex_long$Annotated, breaks = 500, xlim = c(0,100))
+```
+

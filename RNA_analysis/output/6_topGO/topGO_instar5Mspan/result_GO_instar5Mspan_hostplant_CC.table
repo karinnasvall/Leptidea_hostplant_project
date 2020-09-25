@@ -1,0 +1,7 @@
+"","GeneName","GO.ID","Term","Annotated","Significant","Expected","weight","ENTREZID","GENENAME"
+"1","RB1CC1","GO:0034045","pre-autophagosomal structure membrane",2,1,0.02,"0.019","40700","Autophagy-related 17"
+"2","RB1CC1","GO:1990316","ATG1/ULK1 kinase complex",2,1,0.02,"0.019","40700","Autophagy-related 17"
+"3","cad96Ca","GO:0005887","integral component of plasma membrane",31,2,0.3,"0.033","43026","Cadherin 96Ca"
+"4","ds","GO:0005887","integral component of plasma membrane",31,2,0.3,"0.033","33245","dachsous"
+"5","nup153","GO:0005719","nuclear euchromatin",3,1,0.03,"0.029","32630","Nucleoporin 153kD"
+"6","nup153","GO:0044613","nuclear pore central transport channel",2,1,0.02,"0.019","32630","Nucleoporin 153kD"

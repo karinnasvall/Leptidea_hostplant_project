@@ -1,0 +1,8 @@
+"" "GeneName" "GO.ID" "Term" "Annotated" "Significant" "Expected" "weight" "ENTREZID" "GENENAME" "Cohort"
+"1" "CG17633" "GO:0004181" "metallocarboxypeptidase activity" 3 1 0.02 "0.024" "34297" "CG17633 gene product from transcript CG17633-RA" "instar5Fspan"
+"2" "Jon99Ci" "GO:0004252" "serine-type endopeptidase activity" 4 1 0.03 "0.032" "43545" "Jonah 99Ci" "instar5Fspan"
+"3" "amy" "GO:0004556" "alpha-amylase activity" 1 1 0.01 "0.008" "47764" "Amylase proximal" "instar5Fspan"
+"4" "amy" "GO:0004556" "alpha-amylase activity" 1 1 0.01 "0.008" "36932" "Amylase distal" "instar5Fspan"
+"5" "amy" "GO:0004556" "alpha-amylase activity" 1 1 0.01 "0.008" "250484" "amethyst" "instar5Fspan"
+"6" "lip1" "GO:0016788" "hydrolase activity  acting on ester bonds" 28 2 0.22 "0.018" "43973" "Lipase 1" "instar5Fspan"
+"7" "lip3" "GO:0016788" "hydrolase activity  acting on ester bonds" 28 2 0.22 "0.018" "41643" "CG8823 gene product from transcript CG8823-RA" "instar5Fspan"
