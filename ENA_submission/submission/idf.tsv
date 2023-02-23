@@ -1,0 +1,31 @@
+MAGE-TAB Version	1.1
+Investigation Title	Differential gene expression in two populations of the wood white butterfly (Leptidea sinapis) from Catalonia and Sweden reared on different host plants, Lotus dorycnium and Lotus corniculatus.
+Experiment Description	The differential gene expression study is part of a larger study with the objectives to investigate two populations of the wood white butterfly with different hostplant use, by assessing the female host plant preference, larval growth and developmental time, differential gene expression and microbiome diversity and composition. The aim of the gene expression analysis is to explore whether the two populations have different expression profiles in response to the host plants implying local adaptation.  Larvae from four Swedish females and seven Catalonian females were reared on Lotus dorycnium or L. corniculatus in a split brood design experiment. Larvae were collected at two developmental timepoints, instar 3 and instar 5. In instar 5 one larvae of each sex were collected. The study included in total 66 individuals. RNA from the abdomen was extracted with RNeasy mini kit. Sample 67-72 are RNA from gut tissue extracted with Trizol.  Total RNA-libraries was constructed using TruSeq RNA with poly-A selection for multiplex sequencing on a single Illumina NovaSeq6000 S1 lane with 150 bp paired-end reads at the National Genomics Infrastructure (NGI), Science for Life Laboratory (SciLife) in Stockholm. The average coverage was appr 248 X per gene and sample. The raw reads for each sample is included.
+Experimental Factor Name	diet	growth condition
+Experimental Factor Type	diet	growth condition
+Experimental Factor Term Source REF	EFO	EFO
+Experimental Factor Term Accession Number	EFO_0002755	EFO_0000523
+Person Last Name	Näsvall	Backström
+Person First Name	Karin	Niclas
+Person Mid Initials		
+Person Email	karin.nasvall@ebc.uu.se	niclas.backstrom@ebc.uu.se
+Person Phone		
+Person Fax		
+Person Address	Norbyvägen 18D, SE-75236 Uppsala, Sweden	Norbyvägen 18D, SE-75236 Uppsala, Sweden
+Person Affiliation	Department of Ecology and Genetics Uppsala University	Department of Ecology and Genetics Uppsala University
+Person Roles	submitter	investigator
+Public Release Date	2020-10-01
+PubMed ID	
+Publication DOI	
+Publication Author List	Karin Näsvall, Christer Wiklund, Veronika Mrazek, Axel Künstner, Venkat Talla, Hauke Busch, Roger Vila, Niclas Backström
+Publication Title	Host plant diet affect growth and induces altered gene expression and microbiome composition in the wood white (Leptidea sinapis) butterfly
+Publication Status	submitted
+Publication Status Term Source REF	EFO
+Publication Status Term Accession Number	EFO_0001794
+Term Source Name	EFO
+Term Source File	http://www.ebi.ac.uk/efo/
+Term Source Version	
+SDRF File	sdrf.tsv
+Comment[TemplateType]	Animal - High-throughput sequencing
+Comment[AEExperimentType]	RNA-seq of coding RNA
+Comment[RelatedExperiment]	PRJEB35538
